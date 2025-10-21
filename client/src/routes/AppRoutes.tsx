@@ -21,10 +21,10 @@ import AuthLayout from "../layouts/auth/AuthLayout";
 import { ResetPassword } from "../pages/Auth/ResetPassword";
 import AdminLayout from "../layouts/admin/AdminLayout";
 import OwnerLayout from "../layouts/owner/OwnerLayout";
-import { NotFound } from "../pages/Error/NotFound";
-import { OwnerDashboard } from "../pages/Owner/OwnerDashboard";
+import NotFound from "../pages/Error/NotFound";
+import OwnerDashboard from "../pages/Owner/OwnerDashboard";
 import AdoptionProcess from "../pages/Client/AdoptionProcess";
-import DonateSupportPage from "../pages/Client/DonateSupport";
+import ForgotPassword from "../pages/Auth/ForgotPassword";
 // Define the routes using RouteObject array
 const ROUTES: RouteObject[]  = [
    {
@@ -38,10 +38,6 @@ const ROUTES: RouteObject[]  = [
       {
          path: "about",
          element: <About />
-      },
-      {
-         path: "donate",
-         element: <DonateSupportPage />
       },
       {
          path: "adoption-process",
@@ -61,7 +57,7 @@ const ROUTES: RouteObject[]  = [
       },
       {
          path: "pets/:id",
-         element: <PetDetails />
+         element: <PetDetails pet={undefined as any} setPage={() => {}} />
       },
       {
          path: "adoption-request/:petId", 
@@ -89,6 +85,10 @@ const ROUTES: RouteObject[]  = [
          {
             path: "reset-password/:token",
             element: <ResetPassword />
+         },
+         {
+            path: "forgot-password",
+            element: <ForgotPassword />
          }
       ]
    },
@@ -97,7 +97,7 @@ const ROUTES: RouteObject[]  = [
       path: "/admin",
       children: [
          {
-            path: "dashboard",
+            index: true,
             element: <AdminDashboard />
          },
          {
@@ -115,12 +115,12 @@ const ROUTES: RouteObject[]  = [
       path: "/owner",
       children: [
          {
-            path: "dashboard",
-            element: <OwnerDashboard />
+            index: true,
+            element: <OwnerDashboard pets={[]} navigate={() => {}} currentOwnerId={""} />
          },
          {
             path: "add-pet",
-            element: <AddPet />
+            element: <AddPet navigate={() => {}} addPet={() => {}} />
          },
          {
             path: "my-pets",
@@ -128,13 +128,13 @@ const ROUTES: RouteObject[]  = [
          },
          {
             path: "edit-pet/:id",
-            element: <EditPet />
+            element: <EditPet pets={[]} currentOwnerId={""} navigateToEdit={() => {}} navigate={() => {}} />
          }
       ]
    },
    {
       path: "*",
-      element: <NotFound />
+      element: <NotFound setPage={() => {}} />
    }
 ];
 

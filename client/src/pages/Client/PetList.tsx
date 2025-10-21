@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import ThreeBackground from '../../components/Background/Background';
+import { Link } from 'react-router';
 // Declaration for THREE.js global object access (for TypeScript)
 declare global {
   interface Window {
@@ -75,13 +76,23 @@ const PetCard: React.FC<{ pet: Pet }> = ({ pet }) => {
                 </div>
 
                 <div className="mt-auto">
-                    <button
-                        className="w-full text-white font-bold py-2 rounded-lg shadow-md transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95"
-                        style={{ backgroundColor: COLORS.darkAccentGreen }}
-                        disabled={pet.status !== 'Available'}
-                    >
-                        {pet.status === 'Available' ? 'Adopt Me!' : 'Check Details'}
-                    </button>
+                    {pet.status === 'Available' ? (
+                        <Link
+                            to={`/pets/${pet.id}`}
+                            className="w-full text-white font-bold p-2 rounded-lg shadow-md transition duration-300 hover:opacity-95"
+                            style={{ backgroundColor: COLORS.darkAccentGreen }}
+                        >
+                            Adopt Me!
+                        </Link>
+                    ) : (
+                        <button
+                            className="w-full text-white font-bold p-2 rounded-lg shadow-md transition duration-300 opacity-50 cursor-not-allowed"
+                            style={{ backgroundColor: COLORS.darkAccentGreen }}
+                            disabled
+                        >
+                            Check Details
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

@@ -71,7 +71,8 @@ const LoginForm: React.FC = () => {
         Log In
       </button>
 
-      <a href="#" className="block text-center mt-4 text-sm hover:underline" style={{ color: COLORS.primaryTeal }}>Forgot Password?</a>
+      <Link to={"/auth/forgot-password"} className="block text-center mt-4 text-sm hover:underline" style={{ color: COLORS.primaryTeal }}>
+      Forgot Password?</Link>
     </form>
   );
 };
