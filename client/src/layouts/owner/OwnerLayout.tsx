@@ -15,12 +15,17 @@ const OwnerLayout = () => {
     <>
       <Sidebar
         currentView={ currentView as any }
-        navigate={navigate}
         setIsLoggedIn={setIsLoggedInHandler}
         isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
       />
-      <Outlet />
+      <div
+        className={`flex-grow p-10 transition-all duration-300 ${
+          isSidebarOpen ? 'ml-72' : 'ml-24'
+        }`}
+      >
+        <Outlet /> {/* Your routed pages will render here */}
+      </div>
     </>
   );
 };

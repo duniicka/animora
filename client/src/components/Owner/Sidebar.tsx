@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   PawPrint,
   XCircle,
@@ -18,30 +19,32 @@ const COLORS = {
   sidebarText: '#ECF0F1',
 };
 
-type NavItemProps = {
-  view: AppView;
+type SidebarProps = {
+  currentView: AppView;
+  setIsLoggedIn: (status: boolean) => void;
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+  ownerId?: string;
+};
+
+type NavLinkItemProps = {
+  to: string;
   label: string;
   icon: React.ReactNode;
   isSidebarOpen: boolean;
-  navigate: (view: AppView) => void;
-  currentView: AppView;
+  end?: boolean; // <-- NEW: exact match when true
 };
 
-const NavItem: React.FC<NavItemProps> = ({
-  view,
-  label,
-  icon,
-  isSidebarOpen,
-  navigate,
-  currentView,
-}) => {
-  const isActive = currentView === view;
+const NavLinkItem: React.FC<NavLinkItemProps> = ({ to, label, icon, isSidebarOpen, end }) => {
   return (
-    <button
-      onClick={() => navigate(view)}
-      className={`flex items-center w-full px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 transform hover:scale-[1.02] ${
-        isActive ? 'bg-teal-600 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-      } ${isSidebarOpen ? 'justify-start' : 'justify-center'}`}
+    <NavLink
+      to={to}
+      end={end} // <-- exact match
+      className={({ isActive }) =>
+        `flex items-center w-full px-4 py-3 rounded-xl text-sm font-semibold transition duration-200 transform hover:scale-[1.02] ${
+          isActive ? 'bg-teal-600 text-white shadow-lg' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+        } ${isSidebarOpen ? 'justify-start' : 'justify-center'}`
+      }
       title={!isSidebarOpen ? label : undefined}
     >
       <div
@@ -52,22 +55,27 @@ const NavItem: React.FC<NavItemProps> = ({
         {icon}
       </div>
       {isSidebarOpen && label}
-    </button>
+    </NavLink>
   );
 };
 
-type SidebarProps = {
-  currentView: AppView;
-  navigate: (view: AppView) => void;
-  setIsLoggedIn: (status: boolean) => void;
-  isSidebarOpen: boolean;
-  toggleSidebar: () => void;
-  ownerId?: string; // optional: if provided, shows in footer
-};
+
+const Logo: React.FC = () => (
+  <>
+    <svg
+      className="w-8 h-8"
+      style={{ color: COLORS.primaryTeal }}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-10v5c0 .552.448 1 1 1s1-.448 1-1v-5c0-.552-.448-1-1-1s-1 .448-1 1zm-3.5 2h7c.276 0 .5.224.5.5s-.224.5-.5.5h-7c-.276 0-.5-.224-.5-.5s.224-.5.5-.5z" />
+    </svg>
+  </>
+);
+
 
 const Sidebar: React.FC<SidebarProps> = ({
   currentView,
-  navigate,
   setIsLoggedIn,
   isSidebarOpen,
   toggleSidebar,
@@ -80,7 +88,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       className={`flex flex-col ${sidebarWidth} h-screen fixed top-0 left-0 p-5 shadow-2xl transition-all duration-300 ease-in-out z-30`}
       style={{ backgroundColor: COLORS.sidebarBg, color: COLORS.sidebarText }}
     >
-      {/* Header + Toggle */}
       <div
         className={`flex items-center ${
           isSidebarOpen ? 'justify-between' : 'justify-center'
@@ -91,8 +98,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0 w-0'
           }`}
         >
-          <PawPrint className="text-3xl mr-3" style={{ color: COLORS.primaryTeal }} size={28} />
-          <span className="text-2xl font-extrabold text-white whitespace-nowrap">Shelter Admin</span>
+          <Logo  />
+          <span className="text-2xl font-extrabold text-white whitespace-nowrap">Animal Owner</span>
         </div>
 
         <button
@@ -106,29 +113,24 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Navigation */}
       <div className="flex-grow space-y-3">
-        <NavItem
-          view="owner_dashboard"
+        <NavLinkItem
+          to="/owner"
+          end // <-- EXACT match so it won't be active on /owner/*
           label="Dashboard"
           icon={<LayoutDashboard size={20} />}
           isSidebarOpen={isSidebarOpen}
-          navigate={navigate}
-          currentView={currentView}
         />
-        <NavItem
-          view="owner_add"
+        <NavLinkItem
+          to="/owner/add-pet"
           label="Add New Pet"
           icon={<PlusCircle size={20} />}
           isSidebarOpen={isSidebarOpen}
-          navigate={navigate}
-          currentView={currentView}
         />
-        <NavItem
-          view="owner_pets"
+        <NavLinkItem
+          to="/owner/my-pets"
           label="My Shared Pets"
           icon={<ListTodo size={20} />}
           isSidebarOpen={isSidebarOpen}
-          navigate={navigate}
-          currentView={currentView}
         />
       </div>
 
