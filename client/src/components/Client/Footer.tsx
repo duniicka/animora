@@ -1,33 +1,39 @@
 import React from 'react';
+import { Link } from 'react-router';
 
-// Rəng sxemi (App.tsx faylındakı əsas rənglərlə eynidir)
 const COLORS = {
-  primaryTeal: '#009688', // Əsas firuzəyi rəng
-  darkAccentGreen: '#00796B', // Tünd vurğu yaşılı
-  backgroundLight: '#F8F9FA', // Açıq fon
-  cardBackground: '#FFFFFF', // Kart fonu
+  primaryTeal: '#009688', 
+  darkAccentGreen: '#00796B', 
+  backgroundLight: '#F8F9FA', 
+  cardBackground: '#FFFFFF',
 };
 
-// Kiçik Logo Komponenti
-const FooterLogo = () => (
-    <div className="flex items-center space-x-2">
-        {/* Paw icon */}
-        <svg className="w-8 h-8" style={{ color: COLORS.primaryTeal }} fill="currentColor" viewBox="0 0 24 24">
-            <path d="M11 20.85c-1.5-.7-2.6-1.5-3.6-2.5a6.5 6.5 0 0 1-1.3-1.6 4.3 4.3 0 0 1-.7-1.4c-.2-.6-.3-1.3-.3-2a4.4 4.4 0 0 1 1-3.2 5 5 0 0 1 3.5-1.5c.6 0 1.2.1 1.8.3.6.2 1.1.5 1.6.8a5 5 0 0 1 1.6-1.6c.5-.3 1.1-.6 1.7-.8.6-.2 1.2-.3 1.8-.3a5 5 0 0 1 3.5 1.5 4.4 4.4 0 0 1 1 3.2c0 .7-.1 1.4-.3 2a6.5 6.5 0 0 1-1.3 1.6c-1 .9-2.1 1.8-3.6 2.5a3.8 3.8 0 0 1-3.5 0zM12 2a4 4 0 0 1 4 4c0 1.6-1.4 3-4 3S8 7.6 8 6a4 4 0 0 1 4-4z"/>
-        </svg>
-        <span className="text-2xl font-extrabold tracking-tight" style={{ color: COLORS.darkAccentGreen }}>Animora</span>
-    </div>
+const Logo: React.FC<{ isActive?: boolean }> = ({ isActive = false }) => (
+  <Link to="/" className="flex items-center space-x-2 transition duration-300">
+    <svg
+      className="w-8 h-8"
+      style={{ color: COLORS.primaryTeal}}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-10v5c0 .552.448 1 1 1s1-.448 1-1v-5c0-.552-.448-1-1-1s-1 .448-1 1zm-3.5 2h7c.276 0 .5.224.5.5s-.224.5-.5.5h-7c-.276 0-.5-.224-.5-.5s.224-.5.5-.5z" />
+    </svg>
+    <span
+      className="text-2xl font-extrabold tracking-tight transition duration-300"
+      style={{ color: COLORS.primaryTeal  }}
+    >
+      Animora
+    </span>
+  </Link>
 );
 
-// Əsas Altbilgi (Footer) Komponenti
 const Footer = () => {
     
-    // Altbilgi Naviqasiya linkləri
     const navLinks = [
-        { name: "Mövcud Heyvanlar", url: "#pets" },
-        { name: "Övladlığa Götürmə Prosesi", url: "#adoption" },
-        { name: "Haqqımızda & Təsir", url: "#about" },
-        { name: "Könüllü Olun", url: "#volunteer" },
+        { name: "Available Animals", url: "#pets" },
+        { name: "Adoption Process", url: "#adoption" },
+        { name: "About Us & Impact", url: "#about" },
+        { name: "Become a Volunteer", url: "#volunteer" },
     ];
 
     return (
@@ -37,21 +43,18 @@ const Footer = () => {
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 
-                {/* Əsas Kontent Bloku (4 Sütun) */}
                 <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-4 mb-10">
                     
-                    {/* 1. Şirkət İnformasiyası */}
                     <div>
-                        <FooterLogo />
+                        <Logo />
                         <p className="mt-4 text-sm text-gray-500 max-w-xs">
-                            Hər canlının ikinci bir şansa layiq olduğuna inanırıq. Məsuliyyətli övladlığa götürmə yolu ilə heyvanların həyatını dəyişirik.
+                            We believe that every living being deserves a second chance. Through responsible adoption, we change animals' lives.
                         </p>
                     </div>
 
-                    {/* 2. Naviqasiya Linkləri */}
                     <div>
                         <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.darkAccentGreen }}>
-                            Sürətli Keçidlər
+                            Quick Links
                         </h3>
                         <ul className="space-y-2 text-sm">
                             {navLinks.map(link => (
@@ -68,15 +71,14 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    {/* 3. Əlaqə Məlumatları */}
                     <div>
                         <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.darkAccentGreen }}>
-                            Bizimlə Əlaqə
+                            Contact Us
                         </h3>
                         <ul className="space-y-3 text-sm text-gray-600">
                             <li className="flex items-center">
                                 <i className="fas fa-map-marker-alt mr-2" style={{ color: COLORS.primaryTeal }}></i> 
-                                Bakı, Azərbaycan
+                                Baku, Azerbaijan
                             </li>
                             <li className="flex items-center">
                                 <i className="fas fa-phone mr-2" style={{ color: COLORS.primaryTeal }}></i> 
@@ -89,10 +91,9 @@ const Footer = () => {
                         </ul>
                     </div>
                     
-                    {/* 4. Sosial Media */}
                     <div>
                         <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.darkAccentGreen }}>
-                            Bizi İzləyin
+                            Follow Us
                         </h3>
                         <div className="flex space-x-4 text-2xl">
                             <a href="#" className="hover:opacity-75 transition duration-150" style={{ color: COLORS.primaryTeal }}>
@@ -112,15 +113,14 @@ const Footer = () => {
                             className="mt-5 text-white font-bold px-4 py-2 rounded-lg transition duration-300 shadow-md text-sm hover:scale-[1.03]"
                             style={{ backgroundColor: COLORS.darkAccentGreen }}
                         >
-                            İndi Bağış Edin
+                            Donate Now
                         </button>
                     </div>
 
                 </div>
                 
-                {/* Müəllif Hüquqları Bölməsi */}
                 <div className="border-t pt-4 text-center text-sm text-gray-500" style={{ borderColor: COLORS.primaryTeal + '20' }}>
-                    &copy; {new Date().getFullYear()} Paws & Purpose. Bütün hüquqlar qorunur.
+                    &copy; {new Date().getFullYear()} Paws & Purpose. All rights reserved.
                 </div>
             </div>
         </footer>

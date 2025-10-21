@@ -11,7 +11,7 @@ const Logo: React.FC<{ isActive: boolean }> = ({ isActive }) => (
   <Link to="/" className="flex items-center space-x-2 transition duration-300">
     <svg
       className="w-8 h-8"
-      style={{ color: COLORS.primaryTeal}}
+      style={{ color: COLORS.primaryTeal }}
       fill="currentColor"
       viewBox="0 0 24 24"
     >
@@ -19,7 +19,7 @@ const Logo: React.FC<{ isActive: boolean }> = ({ isActive }) => (
     </svg>
     <span
       className="text-2xl font-extrabold tracking-tight transition duration-300"
-      style={{ color: COLORS.primaryTeal  }}
+      style={{ color: COLORS.primaryTeal }}
     >
       Animora
     </span>
@@ -28,12 +28,24 @@ const Logo: React.FC<{ isActive: boolean }> = ({ isActive }) => (
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const isPetsPage = location.pathname.startsWith("/pets");
 
+  const isPetsPage = location.pathname.startsWith("/pets");
   const linkBase =
+
     "font-medium transition duration-150 hover:text-gray-900";
   const activeStyle = { color: COLORS.primaryTeal, fontWeight: 700 as const };
-
+  const handleAuthClick = () => {
+    const isLoggedIn: boolean = false; // Replace with your actual authentication logic
+    if (isLoggedIn) {
+      console.log("LOGGED IN: 'My Account' clicked. Redirecting to Profile page.");
+      // Replace with your real destination:
+      window.location.href = "/profile";
+    } else {
+      console.log("LOGGED OUT: 'My Account' clicked. Redirecting to Sign In/Sign Up page.");
+      // Replace with your real destination:
+      window.location.href = "/auth/login";
+    }
+  };
   return (
     <header className="relative z-10 bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -73,6 +85,7 @@ const Header: React.FC = () => {
           </NavLink>
 
           <a
+            onClick={handleAuthClick}
             href="#"
             className="font-bold px-4 py-2 rounded-lg transition duration-150 text-white shadow-md hover:scale-[1.03]"
             style={{ backgroundColor: COLORS.darkAccentGreen }}
