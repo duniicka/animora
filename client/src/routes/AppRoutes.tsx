@@ -25,6 +25,7 @@ import NotFound from "../pages/Error/NotFound";
 import OwnerDashboard from "../pages/Owner/OwnerDashboard";
 import AdoptionProcess from "../pages/Client/AdoptionProcess";
 import ForgotPassword from "../pages/Auth/ForgotPassword";
+import OwnerChat from "../pages/Owner/OwnerChat";
 // Define the routes using RouteObject array
 const ROUTES: RouteObject[]  = [
    {
@@ -129,6 +130,10 @@ const ROUTES: RouteObject[]  = [
          {
             path: "edit-pet/:id",
             element: <EditPet pets={[]} currentOwnerId={""} navigateToEdit={() => {}} navigate={() => {}} />
+         },
+         {
+            path: "chat",
+            element: <OwnerChat />
          }
       ]
    },
