@@ -9,9 +9,22 @@ import {
     ListTodo,
     LogOut,
     MessageSquare,
+    Link,
 } from 'lucide-react';
 
 export type AppView = 'owner_dashboard' | 'owner_add' | 'owner_pets' | 'owner_edit' | 'owner_chat'; // Chat View tipi əlavə edildi
+const Logo: React.FC = () => {
+  return (
+    <svg
+      className="w-8 h-8"
+      style={{ color: COLORS.primaryTeal }}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-10v5c0 .552.448 1 1 1s1-.448 1-1v-5c0-.552-.448-1-1-1s-1 .448-1 1zm-3.5 2h7c.276 0 .5.224.5.5s-.224.5-.5.5h-7c-.276 0-.5-.224-.5-.5s.224-.5.5-.5z" />
+    </svg>
+  );
+};
 
 const COLORS = {
     primaryTeal: '#00A896',
@@ -59,16 +72,6 @@ const NavLinkItem: React.FC<NavLinkItemProps> = ({ to, label, icon, isSidebarOpe
         </NavLink>
     );
 };
-
-
-const Logo: React.FC = () => (
-    <>
-        <PawPrint 
-            className="w-8 h-8"
-            style={{ color: COLORS.primaryTeal }}
-        />
-    </>
-);
 
 
 const Sidebar: React.FC<SidebarProps> = ({

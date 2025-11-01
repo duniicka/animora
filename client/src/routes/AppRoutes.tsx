@@ -129,7 +129,7 @@ const ROUTES: RouteObject[]  = [
          },
          {
             path: "edit-pet/:id",
-            element: <EditPet pets={[]} currentOwnerId={""} navigateToEdit={() => {}} navigate={() => {}} />
+            element: <EditPet setPets={() => {}} navigate={() => {}} />
          },
          {
             path: "chat",
