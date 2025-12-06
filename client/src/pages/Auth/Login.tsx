@@ -1,12 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ThreeBackground from '../../components/Background/Background';
-import { Link } from 'react-router';
-// Declaration for THREE.js global object access (for TypeScript)
-declare global {
-  interface Window {
-    THREE: any;
-  }
-}
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { FcGoogle } from "react-icons/fc";
+import { getRoleBasedRedirect } from '../../utils/roleRedirect';
 
 // --- Configuration and Data ---
 
@@ -48,11 +45,32 @@ const FormField: React.FC<{ label: string; type: string; value: string; onChange
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login Attempt:', { email, password });
-    // TODO: Login API call goes here
+    setError('');
+    setLoading(true);
+
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      // Get user from localStorage to check role
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const redirectPath = getRoleBasedRedirect(user.role);
+        navigate(redirectPath);
+      } else {
+        navigate('/');
+      }
+    } else {
+      setError(result.error || 'Login failed');
+    }
   };
 
   return (
@@ -60,33 +78,52 @@ const LoginForm: React.FC = () => {
       <h3 className="text-2xl font-bold mb-6 text-center" style={{ color: COLORS.primaryTeal }}>
         Log In
       </h3>
-      <FormField label="Email Address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      <FormField label="Email or Username" type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
       <FormField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
       <button
         type="submit"
-        className="w-full text-white font-bold py-3 mt-4 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01] hover:shadow-lg"
+        disabled={loading}
+        className="w-full text-white font-bold py-3 mt-4 rounded-xl shadow-md transition duration-300 transform hover:scale-[1.01] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ backgroundColor: COLORS.primaryTeal }}
       >
-        Log In
+        {loading ? 'Logging in...' : 'Log In'}
+      </button>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Or continue with</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => window.location.href = `http://localhost:5000/auth/google`}
+        className="flex items-center justify-center w-full py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 transform hover:scale-[1.01] shadow-sm hover:shadow-md"
+      >
+        <FcGoogle className="mr-3 text-xl" /> 
+        <span>Continue with Google</span>
       </button>
 
       <Link to={"/auth/forgot-password"} className="block text-center mt-4 text-sm hover:underline" style={{ color: COLORS.primaryTeal }}>
-      Forgot Password?</Link>
+        Forgot Password?
+      </Link>
     </form>
   );
 };
 
 
-
-// --- Main App Component ---
-
-const App: React.FC = () => {
-  // State to manage which view is active: true for Login, false for Sign-up
-  const [isLoginView, setIsLoginView] = useState(true);
-
-  const toggleView = () => setIsLoginView(!isLoginView);
-
+const Login: React.FC = () => {
   return (
     <div className="text-gray-800 relative" style={{ fontFamily: 'Inter, sans-serif' }}>
       <ThreeBackground />
@@ -128,4 +165,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Login;

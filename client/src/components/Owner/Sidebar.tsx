@@ -1,5 +1,7 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import LogoutModal from '../LogoutModal';
 import {
     PawPrint,
     XCircle,
@@ -10,6 +12,7 @@ import {
     LogOut,
     MessageSquare,
     Link,
+    User,
 } from 'lucide-react';
 
 export type AppView = 'owner_dashboard' | 'owner_add' | 'owner_pets' | 'owner_edit' | 'owner_chat'; // Chat View tipi əlavə edildi
@@ -81,6 +84,16 @@ const Sidebar: React.FC<SidebarProps> = ({
     ownerId,
 }) => {
     const sidebarWidth = isSidebarOpen ? 'w-72' : 'w-24';
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        setIsLoggedIn(false);
+        setShowLogoutModal(false);
+        navigate('/');
+    };
 
     return (
         <div
@@ -140,13 +153,18 @@ const Sidebar: React.FC<SidebarProps> = ({
                     icon={<ListTodo size={20} />}
                     isSidebarOpen={isSidebarOpen}
                 />
+                <NavLinkItem
+                    to="/owner/profile"
+                    label="Profile"
+                    icon={<User size={20} />}
+                    isSidebarOpen={isSidebarOpen}
+                />
             </div>
 
             {/* Footer / Logout */}
             <div className="pt-4 border-t border-gray-700">
-                <NavLink
-                    to="/"
-                    onClick={() => setIsLoggedIn(false)}
+                <button
+                    onClick={() => setShowLogoutModal(true)}
                     className={`flex items-center w-full px-4 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-gray-700 transition duration-150 ${
                         isSidebarOpen ? 'justify-start' : 'justify-center'
                     }`}
@@ -160,12 +178,19 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <LogOut size={20} />
                     </div>
                     {isSidebarOpen && 'Log Out'}
-                </NavLink>
+                </button>
 
                 {isSidebarOpen && ownerId && (
                     <p className="text-xs text-gray-400 mt-2 truncate">Owner ID: {ownerId}</p>
                 )}
             </div>
+
+            {/* Logout Modal */}
+            <LogoutModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogout}
+            />
         </div>
     );
 };

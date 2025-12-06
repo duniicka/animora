@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     PawPrint, 
     Info, 
@@ -9,7 +10,8 @@ import {
     MapPin, 
     Scale, 
     PlusCircle,
-    Check
+    Check,
+    CheckCircle
 } from 'lucide-react'; 
 
 const COLORS = {
@@ -36,11 +38,6 @@ export interface Pet {
   ownerId: string;
 }
 
-type AddNewPetFormProps = {
-  navigate: (view: string) => void;
-  addPet: (pet: Omit<Pet, 'id' | 'ownerId'>) => void;
-};
-
 // --- Reusable Component: Form Section Header (Dashboard style - Unchanged) ---
 const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; color: string }> = ({
   title,
@@ -58,8 +55,67 @@ const SectionHeader: React.FC<{ title: string; icon: React.ReactNode; color: str
   </h3>
 );
 
+// --- Success Modal Component ---
+const SuccessModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  petName: string;
+}> = ({ isOpen, onClose, petName }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setIsVisible(true), 10);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      }`}
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+      <div
+        className={`relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 ${
+          isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+            <CheckCircle className="w-12 h-12 text-green-500" />
+          </div>
+        </div>
+
+        <h3 className="text-3xl font-bold text-center text-gray-800 mb-2">
+          Success!
+        </h3>
+
+        <p className="text-center text-gray-600 mb-6 text-lg">
+          <span className="font-semibold text-green-600">{petName}</span> has been added successfully!
+        </p>
+
+        <button
+          onClick={onClose}
+          className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all duration-200 text-lg"
+        >
+          View My Pets
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- AddPet Component ---
-const AddPet: React.FC<AddNewPetFormProps> = ({ navigate, addPet }) => {
+const AddPet: React.FC = () => {
+  const navigate = useNavigate();
   const initialFormState: Omit<Pet, 'id' | 'ownerId' | 'imageTexts'> = {
     name: '',
     type: 'Dog',
@@ -76,6 +132,8 @@ const AddPet: React.FC<AddNewPetFormProps> = ({ navigate, addPet }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [addedPetName, setAddedPetName] = useState('');
 
   // --- Handlers (Unchanged) ---
   const handleChange = (
@@ -115,26 +173,67 @@ const AddPet: React.FC<AddNewPetFormProps> = ({ navigate, addPet }) => {
     setImagePreviewUrl(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const newPet: Omit<Pet, 'id' | 'ownerId'> = {
-      ...formData,
-      age: Number(formData.age),
-      imageTexts: imageFile 
-        ? [`${formData.name} Photo - ${imageFile.name}`]
-        : [`${formData.name} Default Image`],
-    };
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('type', formData.type);
+      formDataToSend.append('breed', formData.breed);
+      formDataToSend.append('age', String(formData.age));
+      formDataToSend.append('location', formData.location);
+      formDataToSend.append('status', formData.status);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('temperament', JSON.stringify(formData.temperament));
+      formDataToSend.append('health', formData.health);
+      
+      // Add image file if exists
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
 
-    setTimeout(() => {
-        addPet(newPet);
+      const response = await fetch('http://localhost:5000/api/pets', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type, browser will set it with boundary for FormData
+        },
+        body: formDataToSend
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('Pet added successfully:', data.pet);
+        
+        // Clean up image preview
         if (imagePreviewUrl) {
-            URL.revokeObjectURL(imagePreviewUrl);
+          URL.revokeObjectURL(imagePreviewUrl);
         }
-        setIsSubmitting(false);
-        navigate('owner_pets');
-    }, 1500); 
+        
+        // Show success modal
+        setAddedPetName(formData.name);
+        setShowSuccessModal(true);
+      } else {
+        console.error('Failed to add pet:', data.message);
+        alert('Failed to add pet: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Add pet error:', error);
+      alert('Failed to add pet. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/owner/my-pets');
   };
 
   // --- Dashboard-Inspired & Enhanced CSS Classes (Unchanged) ---
@@ -381,6 +480,13 @@ const AddPet: React.FC<AddNewPetFormProps> = ({ navigate, addPet }) => {
           </button>
         </div>
       </form>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        petName={addedPetName}
+      />
     </div>
   );
 };

@@ -21,10 +21,11 @@ type SettingSection = 'account' | 'privacy' | 'language' | 'history';
 // Mock Data Types (Minimized for this request)
 interface UserActivity { id: number; title: string; date: string; status: 'Completed' | 'InProgress' | 'Pending'; type: 'Adoption' | 'Donation' | 'Volunteer'; icon: string; }
 
-// Mock User Data for Profile Page
-const mockUserActivities: UserActivity[] = [
-  { id: 1, title: "Adoption Application for Max", date: "2024-10-01", status: "InProgress", type: 'Adoption', icon: 'fas fa-dog' },
-  { id: 2, title: "Monthly Shelter Support Donation", date: "2024-09-15", status: "Completed", type: 'Donation', icon: 'fas fa-hand-holding-dollar' },
+// Mock Owner Activity Data
+const mockOwnerActivities: UserActivity[] = [
+  { id: 1, title: "Listed pet: Golden Retriever 'Buddy'", date: "2024-11-15", status: "Completed", type: 'Adoption', icon: 'fas fa-dog' },
+  { id: 2, title: "Adoption inquiry for 'Max'", date: "2024-11-10", status: "InProgress", type: 'Adoption', icon: 'fas fa-envelope' },
+  { id: 3, title: "Pet profile updated: 'Luna'", date: "2024-11-05", status: "Completed", type: 'Adoption', icon: 'fas fa-edit' },
 ];
 
 // --- SETTINGS MODULE COMPONENTS ---
@@ -273,43 +274,36 @@ const LanguageRegionModule: React.FC = () => (
   </div>
 );
 
-const SettingSidebarLink: React.FC<{
+// Tab Button Component
+const TabButton: React.FC<{
   section: SettingSection,
-  activeSection: SettingSection,
-  setActiveSection: (section: SettingSection) => void,
   icon: string,
-  label: string
-}> = ({ section, activeSection, setActiveSection, icon, label }) => {
-  const isActive = activeSection === section;
-  const baseClasses = "flex items-center space-x-3 p-3 rounded-lg transition duration-200 cursor-pointer";
-  const activeClasses = "text-white font-bold shadow-md";
-  const inactiveClasses = "text-gray-600 hover:bg-gray-100 hover:text-gray-800";
-
+  label: string,
+  isActive: boolean,
+  onClick: () => void
+}> = ({ icon, label, isActive, onClick }) => {
   return (
-    <div
-      className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
-      style={{ backgroundColor: isActive ? COLORS.primaryTeal : COLORS.cardBackground }}
-      onClick={() => setActiveSection(section)}
+    <button
+      onClick={onClick}
+      className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+        isActive 
+          ? 'text-white shadow-lg' 
+          : 'text-gray-600 hover:bg-gray-100'
+      }`}
+      style={{ backgroundColor: isActive ? COLORS.primaryTeal : 'transparent' }}
     >
-      <i className={`${icon} w-5 h-5`}></i>
-      <span className="font-medium">{label}</span>
-    </div>
+      <i className={`${icon}`}></i>
+      <span>{label}</span>
+    </button>
   );
 };
 
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeSettingSection, setActiveSettingSection] = useState<SettingSection>('account');
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<SettingSection>('account');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-
-  const handleLogout = async () => {
-    await logout();
-    setShowLogoutModal(false);
-    navigate('/');
-  };
 
   const handleDeleteAccount = async () => {
     try {
@@ -344,34 +338,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const renderSettingModule = () => {
-    switch (activeSettingSection) {
-      case 'account':
-        return <AccountSettingsModule user={user} />;
-      case 'privacy':
-        return <PrivacySecurityModule onDeleteAccount={() => setShowDeleteModal(true)} onChangePassword={() => setShowChangePasswordModal(true)} />;
-      case 'language':
-        return <LanguageRegionModule />;
-      case 'history':
-        return (
-          <div className="bg-white p-6 rounded-xl shadow-lg border-t-4" style={{ borderColor: COLORS.primaryTeal }}>
-            <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.darkAccentGreen }}>Activity History</h2>
-            <p className="text-gray-600 mb-6">Review your past adoptions, donations, and volunteer activities.</p>
-            <div className="space-y-4">
-              {mockUserActivities.map(activity => (
-                <div key={activity.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-medium text-gray-800">{activity.title}</span>
-                  <span className={`text-sm font-semibold ${activity.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'}`}>{activity.status}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-sm text-gray-500">This section is for detailed logs and historical data.</p>
-          </div>
-        );
-      default:
-        return <AccountSettingsModule user={user} />;
-    }
-  };
+
 
   if (!user) {
     return (
@@ -381,72 +348,90 @@ const ProfilePage: React.FC = () => {
     );
   }
 
-  return (
-    <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Settings Layout: Sidebar + Content */}
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Left Sidebar (Settings Navigation) */}
-        <nav className="lg:w-1/4">
-          <div className="bg-white p-4 rounded-xl shadow-xl space-y-1 sticky top-4">
-            <h3 className="text-lg font-bold mb-2 p-2" style={{ color: COLORS.darkAccentGreen }}>My Settings</h3>
-            <SettingSidebarLink
-              section="account"
-              activeSection={activeSettingSection}
-              setActiveSection={setActiveSettingSection}
-              icon="fas fa-user-circle"
-              label="Account Information"
-            />
-            <SettingSidebarLink
-              section="privacy"
-              activeSection={activeSettingSection}
-              setActiveSection={setActiveSettingSection}
-              icon="fas fa-lock"
-              label="Privacy & Security"
-            />
-            <SettingSidebarLink
-              section="language"
-              activeSection={activeSettingSection}
-              setActiveSection={setActiveSettingSection}
-              icon="fas fa-language"
-              label="Language & Region"
-            />
-            <SettingSidebarLink
-              section="history"
-              activeSection={activeSettingSection}
-              setActiveSection={setActiveSettingSection}
-              icon="fas fa-history"
-              label="Activity History"
-            />
-            
-            {/* Logout Button */}
-            <div 
-              onClick={() => setShowLogoutModal(true)}
-              className="flex items-center space-x-3 p-3 rounded-lg transition duration-200 cursor-pointer text-red-600 hover:bg-red-50 mt-4"
-            >
-              <i className="fas fa-sign-out-alt w-5 h-5"></i>
-              <span className="font-medium">Logout</span>
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'account':
+        return <AccountSettingsModule user={user} />;
+      case 'privacy':
+        return <PrivacySecurityModule onDeleteAccount={() => setShowDeleteModal(true)} onChangePassword={() => setShowChangePasswordModal(true)} />;
+      case 'language':
+        return <LanguageRegionModule />;
+      case 'history':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.darkAccentGreen }}>Activity History</h2>
+            <div className="bg-white p-6 rounded-xl shadow-lg border-t-4" style={{ borderColor: COLORS.primaryTeal }}>
+              <p className="text-gray-600 mb-6">Review your pet listings, adoption inquiries, and profile updates.</p>
+              <div className="space-y-4">
+                {mockOwnerActivities.map(activity => (
+                  <div key={activity.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium text-gray-800">{activity.title}</span>
+                    <span className={`text-sm font-semibold ${activity.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'}`}>{activity.status}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-sm text-gray-500">Track all your pet-related activities and inquiries.</p>
             </div>
           </div>
-        </nav>
+        );
+      default:
+        return <AccountSettingsModule user={user} />;
+    }
+  };
 
-        {/* Right Content Area (Dynamic Module) */}
-        <div className="lg:w-3/4">
-          {renderSettingModule()}
+  return (
+    <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2" style={{ color: COLORS.darkAccentGreen }}>My Settings</h1>
+        <p className="text-gray-600">Manage your account settings and preferences</p>
+      </div>
+
+      {/* Horizontal Tabs */}
+      <div className="bg-white rounded-xl shadow-lg p-2 mb-6">
+        <div className="flex flex-wrap gap-2">
+          <TabButton
+            section="account"
+            icon="fas fa-user-circle"
+            label="Account Information"
+            isActive={activeTab === 'account'}
+            onClick={() => setActiveTab('account')}
+          />
+          <TabButton
+            section="privacy"
+            icon="fas fa-lock"
+            label="Privacy & Security"
+            isActive={activeTab === 'privacy'}
+            onClick={() => setActiveTab('privacy')}
+          />
+          <TabButton
+            section="language"
+            icon="fas fa-language"
+            label="Language & Region"
+            isActive={activeTab === 'language'}
+            onClick={() => setActiveTab('language')}
+          />
+          <TabButton
+            section="history"
+            icon="fas fa-history"
+            label="Activity History"
+            isActive={activeTab === 'history'}
+            onClick={() => setActiveTab('history')}
+          />
         </div>
       </div>
 
-      {/* Modals */}
-      <LogoutModal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-        onConfirm={handleLogout}
-      />
+      {/* Tab Content */}
+      <div className="transition-all duration-300">
+        {renderTabContent()}
+      </div>
 
+      {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={showChangePasswordModal}
         onClose={() => setShowChangePasswordModal(false)}
       />
 
+      {/* Delete Account Modal */}
       <DeleteAccountModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -458,7 +443,7 @@ const ProfilePage: React.FC = () => {
 
 // --- Main App Component ---
 
-const Profile: React.FC = () => {
+const OwnerProfile: React.FC = () => {
   useEffect(() => {
     // Load dependencies
     const link = document.createElement('link');
@@ -484,4 +469,4 @@ const Profile: React.FC = () => {
   );
 };
 
-export default Profile;
+export default OwnerProfile;

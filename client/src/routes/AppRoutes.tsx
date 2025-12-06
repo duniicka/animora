@@ -7,7 +7,11 @@ import Contact from "../pages/Client/Contact";
 import Profile from "../pages/Client/Profile";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
+import VerifyEmail from "../pages/Auth/VerifyEmail";
+import GoogleSuccess from "../pages/Auth/GoogleSuccess";
 import PetList from "../pages/Client/PetList";
+import ProtectedRoute from "../components/ProtectedRoute";
+import PublicRoute from "../components/PublicRoute";
 import PetDetails from "../pages/Client/PetDetails";
 import AddPet from "../pages/Owner/AddPet";
 import MyPets from "../pages/Owner/MyPets";
@@ -26,6 +30,7 @@ import OwnerDashboard from "../pages/Owner/OwnerDashboard";
 import AdoptionProcess from "../pages/Client/AdoptionProcess";
 import ForgotPassword from "../pages/Auth/ForgotPassword";
 import OwnerChat from "../pages/Owner/OwnerChat";
+import OwnerProfile from "../pages/Owner/OwnerProfile";
 // Define the routes using RouteObject array
 const ROUTES: RouteObject[]  = [
    {
@@ -50,7 +55,7 @@ const ROUTES: RouteObject[]  = [
       },
       {
          path: "profile",
-         element: <Profile />
+         element: <ProtectedRoute><Profile /></ProtectedRoute>
       },
       {
          path: "pets",
@@ -62,7 +67,7 @@ const ROUTES: RouteObject[]  = [
       },
       {
          path: "adoption-request/:petId", 
-         element: <AdoptionRequest />
+         element: <ProtectedRoute allowedRoles={['client']}><AdoptionRequest /></ProtectedRoute>
       },
     ]
    },
@@ -73,11 +78,19 @@ const ROUTES: RouteObject[]  = [
       children: [
          {
             path: "login",
-            element: <Login />
+            element: <PublicRoute><Login /></PublicRoute>
          },
          {
             path: "register",
-            element: <Register />
+            element: <PublicRoute><Register /></PublicRoute>
+         },
+         {
+            path: "verify-email",
+            element: <VerifyEmail />
+         },
+         {
+            path: "google/success",
+            element: <GoogleSuccess />
          },
          {
             path: "reset-password",
@@ -94,7 +107,7 @@ const ROUTES: RouteObject[]  = [
       ]
    },
    {
-      element: <AdminLayout />,
+      element: <ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>,
       path: "/admin",
       children: [
          {
@@ -112,7 +125,7 @@ const ROUTES: RouteObject[]  = [
       ]
    },
    {
-      element: <OwnerLayout />,
+      element: <ProtectedRoute allowedRoles={['owner']}><OwnerLayout /></ProtectedRoute>,
       path: "/owner",
       children: [
          {
@@ -121,7 +134,7 @@ const ROUTES: RouteObject[]  = [
          },
          {
             path: "add-pet",
-            element: <AddPet navigate={() => {}} addPet={() => {}} />
+            element: <AddPet />
          },
          {
             path: "my-pets",
@@ -129,11 +142,15 @@ const ROUTES: RouteObject[]  = [
          },
          {
             path: "edit-pet/:id",
-            element: <EditPet setPets={() => {}} navigate={() => {}} />
+            element: <EditPet />
          },
          {
             path: "chat",
             element: <OwnerChat />
+         },
+         {
+            path: "profile",
+            element: <OwnerProfile />
          }
       ]
    },

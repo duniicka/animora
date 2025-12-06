@@ -33,16 +33,11 @@ export async function loginUser(
   email: string,
   password: string
 ): Promise<{ user: User; token: string }> {
-  return new Promise((res) =>
-    setTimeout(
-      () =>
-        res({
-          user: { id: "u1", email, role: "pet_seeker", firstName: "User" },
-          token: "demo-token",
-        }),
-      300
-    )
-  );
+  const response = await API.post("/auth/login", { email, password });
+  return {
+    user: response.data.user,
+    token: response.data.token,
+  };
 }
 
 export async function registerUser(payload: {
@@ -50,22 +45,22 @@ export async function registerUser(payload: {
   password: string;
   role?: string;
   firstName?: string;
+  lastName?: string;
+  phone?: string;
+  address?: string;
 }): Promise<{ user: User; token: string }> {
-  return new Promise((res) =>
-    setTimeout(
-      () =>
-        res({
-          user: {
-            id: "u2",
-            email: payload.email,
-            role: payload.role || "pet_seeker",
-            firstName: payload.firstName || "User",
-          },
-          token: "demo-token",
-        }),
-      300
-    )
-  );
+  const response = await API.post("/auth/register", {
+    email: payload.email,
+    password: payload.password,
+    name: `${payload.firstName || ''} ${payload.lastName || ''}`.trim(),
+    role: payload.role || "client",
+    phone: payload.phone,
+    address: payload.address,
+  });
+  return {
+    user: response.data.user,
+    token: response.data.token,
+  };
 }
 
 export async function fetchPets(
@@ -147,13 +142,13 @@ export async function getCurrentUser(): Promise<User | null> {
   const token = localStorage.getItem("token");
   if (!token) return null;
 
-
-  return {
-    id: "u1",
-    email: "demo@example.com",
-    role: "pet_seeker",
-    firstName: "Demo",
-  };
+  try {
+    const response = await API.get("/auth/me");
+    return response.data.user;
+  } catch (error) {
+    localStorage.removeItem("token");
+    return null;
+  }
 }
 
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   XCircle,
   Menu,
@@ -8,6 +8,8 @@ import {
   UserCog,
   LogOut,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import LogoutModal from '../LogoutModal';
 
 export type AppView = 'admin_dashboard' | 'admin_users' | 'admin_owners';
 
@@ -78,6 +80,16 @@ const Sidebar: React.FC<SidebarProps> = ({
   adminId,
 }) => {
   const sidebarWidth = isSidebarOpen ? 'w-72' : 'w-24';
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    setIsLoggedIn(false);
+    setShowLogoutModal(false);
+    navigate('/');
+  };
 
   return (
     <div
@@ -136,9 +148,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer / Logout */}
       <div className="pt-4 border-t border-gray-700">
-        <NavLink
-          to="/"
-          onClick={() => setIsLoggedIn(false)}
+        <button
+          onClick={() => setShowLogoutModal(true)}
           className={`flex items-center w-full px-4 py-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-gray-700 transition duration-150 ${
             isSidebarOpen ? 'justify-start' : 'justify-center'
           }`}
@@ -152,12 +163,19 @@ const Sidebar: React.FC<SidebarProps> = ({
             <LogOut size={20} />
           </div>
           {isSidebarOpen && 'Log Out'}
-        </NavLink>
+        </button>
 
         {isSidebarOpen && adminId && (
           <p className="text-xs text-gray-400 mt-2 truncate">Admin ID: {adminId}</p>
         )}
       </div>
+
+      {/* Logout Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 // Assuming ThreeBackground is a component for visual effect, keeping the import for completeness
 // import ThreeBackground from '../../components/Background/Background'; 
 import {
-    Heart, PawPrint, Mail, Phone, Home, MessageSquare, Briefcase,
-    CheckCircle, List, ArrowRight, User, MapPin, Search
+    Heart, PawPrint, Home, MessageSquare, Briefcase,
+    CheckCircle, List, ArrowRight
 } from 'lucide-react';
 
 // --- Global Type and Constant Definitions ---
@@ -18,13 +20,14 @@ const COLORS = {
 };
 
 interface Pet {
-    id: number;
+    id: string;
     name: string;
     type: 'Dog' | 'Cat' | 'Bird' | 'Rabbit';
     breed: string;
     age: number;
     location: string;
-    status: 'Available' | 'Pending';
+    status: 'Available' | 'Pending' | 'Adopted';
+    imageUrl?: string;
     imageTexts: string[];
     description: string;
     temperament: string[];
@@ -32,55 +35,13 @@ interface Pet {
 }
 
 interface AdoptionForm {
-    selectedPetId: number | null;
-    applicantName: string;
-    applicantEmail: string;
-    applicantPhone: string;
+    selectedPetId: string | null;
     livingSituation: 'Owner' | 'Renter';
     petExperience: string;
     reasonForAdoption: string;
 }
 
-// --- MOCK PETS (Internal Data) ---
-const MOCK_PETS: Pet[] = [
-    {
-        id: 1,
-        name: "Chick",
-        type: "Cat",
-        breed: "Scottish Fold",
-        age: 1,
-        location: "Baku, Narimanov",
-        status: "Available",
-        imageTexts: ["Cute+Cat+1", "Playful+Cat+2", "Sleeping+Cat+3", "Cat+Profile"],
-        description: "Chick is a very friendly and playful cat. She loves spending time with people and always wants to be cuddled. She gets along well with other cats but has not been introduced to dogs yet. She can stay alone at home and is fully litter trained.",
-        temperament: ["Friendly", "Playful", "Cuddly", "Calm"],
-        health: "All vaccinations are up-to-date, and she is spayed/neutered. Completely healthy.",
-    },
-    // ... other mock pets
-];
-const MockPet = MOCK_PETS[0];
-
 // --- Auxiliary Components ---
-
-// InputField Component
-const InputField: React.FC<any> = ({ icon, name, label, type = 'text', value, onChange, required = true, placeholder }) => (
-    <div className="flex flex-col space-y-2">
-        <label htmlFor={name} className="text-sm font-semibold text-gray-700 flex items-center">
-            {icon}
-            <span className="ml-2">{label} {required && <span className="text-red-500">*</span>}</span>
-        </label>
-        <input
-            id={name}
-            name={name}
-            type={type}
-            value={value}
-            onChange={onChange}
-            required={required}
-            placeholder={placeholder}
-            className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
-        />
-    </div>
-);
 
 // AdoptionFormSection Component
 const AdoptionFormSection: React.FC<{
@@ -103,99 +64,66 @@ const AdoptionFormSection: React.FC<{
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-10">
-                {/* Personal Information */}
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Living Situation & Experience */}
                 <div className="space-y-6">
                     <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2 flex items-center">
-                        <User size={20} className="mr-2 text-teal-600" /> Personal Contact Information
+                        <Briefcase size={20} className="mr-2 text-teal-600" /> Your Information
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputField
-                            icon={<User size={18} />}
-                            name="applicantName"
-                            label="Full Name"
-                            value={formData.applicantName}
-                            onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
-                            placeholder="First and Last Name"
-                        />
-                        <InputField
-                            icon={<Mail size={18} />}
-                            name="applicantEmail"
-                            label="Email Address"
-                            type="email"
-                            value={formData.applicantEmail}
-                            onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
-                            placeholder="example@email.com"
-                        />
+                    
+                    {/* Living Situation */}
+                    <div className="flex flex-col space-y-2">
+                        <label htmlFor="livingSituation" className="text-sm font-semibold text-gray-700 flex items-center">
+                            <Home size={18} />
+                            <span className="ml-2">Living Situation <span className="text-red-500">*</span></span>
+                        </label>
+                        <select
+                            id="livingSituation"
+                            name="livingSituation"
+                            value={formData.livingSituation}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
+                        >
+                            <option value="Owner">Home Owner</option>
+                            <option value="Renter">Renter</option>
+                        </select>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputField
-                            icon={<Phone size={18} />}
-                            name="applicantPhone"
-                            label="Phone Number"
-                            type="tel"
-                            value={formData.applicantPhone}
-                            onChange={handleChange as (e: React.ChangeEvent<HTMLInputElement>) => void}
-                            placeholder="+994 50 123 45 67"
-                        />
-                        <div className="flex flex-col space-y-2">
-                            <label htmlFor="livingSituation" className="text-sm font-semibold text-gray-700 flex items-center">
-                                <Home size={18} />
-                                <span className="ml-2">Living Situation <span className="text-red-500">*</span></span>
-                            </label>
-                            <select
-                                id="livingSituation"
-                                name="livingSituation"
-                                value={formData.livingSituation}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
-                            >
-                                <option value="Owner">Home Owner</option>
-                                <option value="Renter">Renter</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Experience and Motivation */}
-                <div className="space-y-6">
-                    <h3 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2 flex items-center">
-                        <Briefcase size={20} className="mr-2 text-teal-600" /> Pet Experience & Motivation
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col space-y-2">
-                            <label htmlFor="petExperience" className="text-sm font-semibold text-gray-700 flex items-center">
-                                <PawPrint size={18} />
-                                <span className="ml-2">Previous Pet Experience</span>
-                            </label>
-                            <textarea
-                                id="petExperience"
-                                name="petExperience"
-                                value={formData.petExperience}
-                                onChange={handleChange}
-                                rows={4}
-                                placeholder="What pets have you owned before? How did you care for them?"
-                                className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
-                                required
-                            ></textarea>
-                        </div>
-                        <div className="flex flex-col space-y-2">
-                            <label htmlFor="reasonForAdoption" className="text-sm font-semibold text-gray-700 flex items-center">
-                                <MessageSquare size={18} />
-                                <span className="ml-2">Why do you want to adopt {selectedPet.name}?</span>
-                            </label>
-                            <textarea
-                                id="reasonForAdoption"
-                                name="reasonForAdoption"
-                                value={formData.reasonForAdoption}
-                                onChange={handleChange}
-                                rows={4}
-                                placeholder="Please briefly explain your motivation."
-                                className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
-                                required
-                            ></textarea>
-                        </div>
+                    {/* Pet Experience */}
+                    <div className="flex flex-col space-y-2">
+                        <label htmlFor="petExperience" className="text-sm font-semibold text-gray-700 flex items-center">
+                            <PawPrint size={18} />
+                            <span className="ml-2">Previous Pet Experience <span className="text-red-500">*</span></span>
+                        </label>
+                        <textarea
+                            id="petExperience"
+                            name="petExperience"
+                            value={formData.petExperience}
+                            onChange={handleChange}
+                            rows={4}
+                            placeholder="What pets have you owned before? How did you care for them?"
+                            className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
+                            required
+                        ></textarea>
+                    </div>
+
+                    {/* Reason for Adoption */}
+                    <div className="flex flex-col space-y-2">
+                        <label htmlFor="reasonForAdoption" className="text-sm font-semibold text-gray-700 flex items-center">
+                            <MessageSquare size={18} />
+                            <span className="ml-2">Why do you want to adopt {selectedPet.name}? <span className="text-red-500">*</span></span>
+                        </label>
+                        <textarea
+                            id="reasonForAdoption"
+                            name="reasonForAdoption"
+                            value={formData.reasonForAdoption}
+                            onChange={handleChange}
+                            rows={4}
+                            placeholder="Please briefly explain your motivation."
+                            className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl shadow-inner focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition duration-200"
+                            required
+                        ></textarea>
                     </div>
                 </div>
 
@@ -215,27 +143,84 @@ const AdoptionFormSection: React.FC<{
 // --- PET DETAIL COMPONENT ---
 
 const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onReturn }) => {
-    // Use MockPet if no pet prop is provided
-    const currentPet = pet || MockPet;
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const { user } = useAuth();
     
-    const initialFormState: AdoptionForm = {
-        selectedPetId: currentPet.id,
-        applicantName: '',
-        applicantEmail: '',
-        applicantPhone: '',
+    const [currentPet, setCurrentPet] = useState<Pet | null>(pet || null);
+    const [loading, setLoading] = useState(!pet);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [formData, setFormData] = useState<AdoptionForm>({
+        selectedPetId: null,
         livingSituation: 'Owner',
         petExperience: '',
         reasonForAdoption: '',
-    };
-
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [formData, setFormData] = useState<AdoptionForm>(initialFormState);
+    });
     // NEW STATE: Control visibility of the form
-    const [isFormVisible, setIsFormVisible] = useState(false); 
+    const [isFormVisible, setIsFormVisible] = useState(false);
+
+    // Fetch pet data from API
+    useEffect(() => {
+        if (pet) {
+            setCurrentPet(pet);
+            setFormData(prev => ({ ...prev, selectedPetId: pet.id }));
+            return;
+        }
+
+        const fetchPet = async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/api/pets/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const fetchedPet: Pet = {
+                        id: data.pet._id,
+                        name: data.pet.name,
+                        type: data.pet.type,
+                        breed: data.pet.breed,
+                        age: data.pet.age,
+                        location: data.pet.location,
+                        status: data.pet.status,
+                        imageUrl: data.pet.imageUrl,
+                        imageTexts: [data.pet.imageUrl || `${data.pet.name}+${data.pet.type}`],
+                        description: data.pet.description,
+                        temperament: Array.isArray(data.pet.temperament) 
+                            ? data.pet.temperament 
+                            : (typeof data.pet.temperament === 'string' && data.pet.temperament 
+                                ? data.pet.temperament.split(',').map((t: string) => t.trim()) 
+                                : []),
+                        health: data.pet.health,
+                    };
+                    setCurrentPet(fetchedPet);
+                    setFormData(prev => ({ ...prev, selectedPetId: fetchedPet.id }));
+                } else {
+                    setError('Pet not found');
+                }
+            } catch (err) {
+                console.error('Fetch pet error:', err);
+                setError('Failed to load pet details');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchPet();
+        }
+    }, [id, pet]); 
 
     // Function to show the form and smooth scroll
     const handleAdoptClick = () => {
+        if (!currentPet) return;
+        
+        // Check if user is logged in
+        if (!user) {
+            // Redirect to login page
+            navigate('/auth/login');
+            return;
+        }
+        
         setFormData(prev => ({ ...prev, selectedPetId: currentPet.id }));
         setError(null);
         console.log(`Adoption application initiated for: ${currentPet.name}`);
@@ -259,7 +244,7 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
         e.preventDefault();
         setError(null);
 
-        if (!currentPet.id) {
+        if (!currentPet?.id) {
             setError("Error: No pet selected for adoption.");
             return;
         }
@@ -306,6 +291,34 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
         </div>
     );
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen" style={{ backgroundColor: COLORS.backgroundLight }}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 mx-auto mb-4" style={{ borderColor: COLORS.primaryTeal }}></div>
+                    <p className="text-gray-600 font-semibold">Loading pet details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !currentPet) {
+        return (
+            <div className="flex justify-center items-center h-screen" style={{ backgroundColor: COLORS.backgroundLight }}>
+                <div className="text-center">
+                    <p className="text-red-600 font-semibold text-xl mb-4">{error || 'Pet not found'}</p>
+                    <button
+                        onClick={() => navigate('/client/pets')}
+                        className="text-white font-bold py-3 px-6 rounded-full shadow-xl transition duration-300"
+                        style={{ backgroundColor: COLORS.primaryTeal }}
+                    >
+                        <List size={20} className="mr-2 inline" /> Return to Pet List
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (isSubmitted) {
         return <SuccessScreen selectedPet={currentPet} />;
     }
@@ -316,10 +329,10 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
             {/* <ThreeBackground /> */}
             <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 
-                {/* Back Button (Simulated return - use onReturn prop if provided) */}
+                {/* Back Button */}
                 <div className="mb-6">
                     <button
-                        onClick={onReturn || (() => console.log("Back button clicked - Simulating return to pet list..."))}
+                        onClick={onReturn || (() => navigate('/client/pets'))}
                         className="flex items-center text-gray-600 hover:text-gray-900 transition duration-150 font-medium"
                     >
                         <List size={20} className="mr-2" /> Return to List
@@ -350,30 +363,36 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
                             {/* Main Image */}
                             <div className="w-full h-80 bg-gray-100 rounded-xl overflow-hidden shadow-lg border-2 border-dashed flex items-center justify-center">
                                 <img
-                                    src={`https://placehold.co/600x400/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${currentPet.imageTexts[0].replace(/\s/g, '+')}`}
+                                    src={
+                                        currentPet.imageUrl || 
+                                        `https://placehold.co/600x400/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${currentPet.imageTexts[0].replace(/\s/g, '+')}`
+                                    }
                                     alt={`${currentPet.name} - ${currentPet.breed} (Main Image)`}
                                     className="w-full h-full object-cover"
-                                    onError={(e: any) => e.target.src = `https://placehold.co/600x400/ccc/333?text=Image+Not+Found`}
+                                    onError={(e: any) => {
+                                        e.target.src = `https://placehold.co/600x400/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${currentPet.name.replace(/\s/g, '+')}`;
+                                    }}
                                 />
                             </div>
 
                             {/* Image Gallery Thumbnails */}
-                            <div className="flex space-x-3 overflow-x-auto pb-2 px-1">
-                                {currentPet.imageTexts.map((text, index) => (
+                            {currentPet.imageUrl && (
+                                <div className="flex space-x-3 overflow-x-auto pb-2 px-1">
                                     <div
-                                        key={index}
-                                        onClick={() => console.log(`Viewing image ${index + 1}`)}
-                                        className="flex-shrink-0 w-20 h-20 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2 hover:border-teal-500 transition"
-                                        style={{ borderColor: index === 0 ? COLORS.primaryTeal : 'transparent' }}
+                                        className="flex-shrink-0 w-20 h-20 bg-gray-200 rounded-lg overflow-hidden cursor-pointer border-2"
+                                        style={{ borderColor: COLORS.primaryTeal }}
                                     >
                                         <img
-                                            src={`https://placehold.co/100x100/A8DADC/333?text=${text.replace(/\s/g, '+')}`}
-                                            alt={`${currentPet.name} photo ${index + 1}`}
+                                            src={currentPet.imageUrl}
+                                            alt={`${currentPet.name} photo`}
                                             className="w-full h-full object-cover"
+                                            onError={(e: any) => {
+                                                e.target.src = `https://placehold.co/100x100/A8DADC/333?text=${currentPet.name.replace(/\s/g, '+')}`;
+                                            }}
                                         />
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            )}
 
                             {/* Key Characteristics Card */}
                             <div className="bg-gray-50 p-6 rounded-xl shadow-lg border-l-4" style={{ borderColor: COLORS.darkAccentGreen }}>
@@ -400,11 +419,33 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
                             <div>
                                 <h2 className="text-2xl font-bold mb-3 border-b pb-2" style={{ color: COLORS.primaryTeal }}>Temperament</h2>
                                 <div className="flex flex-wrap gap-2">
-                                    {currentPet.temperament.map((t, index) => (
-                                        <span key={index} className="px-3 py-1 bg-teal-100 text-teal-800 font-medium rounded-full text-sm">
-                                            {t}
-                                        </span>
-                                    ))}
+                                    {currentPet.temperament && currentPet.temperament.length > 0 ? (
+                                        currentPet.temperament.map((t, index) => {
+                                            // Clean up the temperament text - remove any JSON artifacts
+                                            let cleanText = t;
+                                            if (typeof t === 'string') {
+                                                // Remove quotes, brackets, and backslashes
+                                                cleanText = t.replace(/[\[\]"\\]/g, '').trim();
+                                                // If still has JSON, try to parse
+                                                if (cleanText.startsWith('[') || cleanText.includes('"')) {
+                                                    try {
+                                                        const parsed = JSON.parse(t);
+                                                        cleanText = Array.isArray(parsed) ? parsed.join(', ') : String(parsed);
+                                                    } catch (e) {
+                                                        // Keep cleaned text
+                                                    }
+                                                }
+                                            }
+                                            
+                                            return cleanText ? (
+                                                <span key={index} className="px-3 py-1 bg-teal-100 text-teal-800 font-medium rounded-full text-sm">
+                                                    {cleanText}
+                                                </span>
+                                            ) : null;
+                                        })
+                                    ) : (
+                                        <span className="text-gray-500 italic">No temperament information available</span>
+                                    )}
                                 </div>
                             </div>
 
@@ -427,10 +468,10 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
                                     {/* This button shows the form and scrolls */}
                                     <button
                                         onClick={handleAdoptClick} 
-                                        className="w-full text-white font-bold py-3 px-8 rounded-full shadow-xl transition duration-300 transform hover:scale-[1.01] hover:shadow-2xl mt-3"
+                                        className="w-full text-white font-bold py-3 px-8 rounded-full shadow-xl transition duration-300 transform hover:scale-[1.01] hover:shadow-2xl mt-3 flex items-center justify-center"
                                         style={{ backgroundColor: COLORS.primaryTeal }}
                                     >
-                                        <Heart size={20} className="mr-2" /> Apply to Adopt
+                                        <Heart size={20} className="mr-2 inline-block" /> Apply to Adopt
                                     </button>
                                 </div>
                             </div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -40,81 +40,6 @@ const COLORS = {
   backgroundLight: '#F5F7FA',
 };
 
-const MOCK_OWNER_ID = 'owner_shelter_123';
-
-const MOCK_PETS: Pet[] = [
-  {
-    id: 1,
-    name: 'Max',
-    type: 'Dog',
-    breed: 'Golden Retriever',
-    age: 2,
-    location: 'Baku',
-    status: 'Available',
-    imageTexts: ['Max+Dog'],
-    description: 'Very friendly family dog.',
-    temperament: ['Loyal', 'Energetic'],
-    health: 'Healthy.',
-    ownerId: MOCK_OWNER_ID,
-  },
-  {
-    id: 2,
-    name: 'Luna',
-    type: 'Cat',
-    breed: 'Siamese',
-    age: 1,
-    location: 'Ganja',
-    status: 'Available',
-    imageTexts: ['Luna+Cat'],
-    description: 'Calm and gentle cat.',
-    temperament: ['Calm', 'Playful'],
-    health: 'Healthy.',
-    ownerId: MOCK_OWNER_ID,
-  },
-  {
-    id: 3,
-    name: 'Rocky',
-    type: 'Dog',
-    breed: 'Pug',
-    age: 5,
-    location: 'Baku',
-    status: 'Pending',
-    imageTexts: ['Rocky+Pug'],
-    description: 'Loves naps and snacks.',
-    temperament: ['Lazy', 'Sweet'],
-    health: 'Requires special diet.',
-    ownerId: MOCK_OWNER_ID,
-  },
-  {
-    id: 4,
-    name: 'Oreo',
-    type: 'Cat',
-    breed: 'Domestic Shorthair',
-    age: 3,
-    location: 'Sumqayit',
-    status: 'Adopted',
-    imageTexts: ['Oreo+Cat'],
-    description: 'Already found a home.',
-    temperament: ['Independent'],
-    health: 'Healthy.',
-    ownerId: MOCK_OWNER_ID,
-  },
-  {
-    id: 5,
-    name: 'Kira',
-    type: 'Rabbit',
-    breed: 'Mini Lop',
-    age: 1,
-    location: 'Baku',
-    status: 'Available',
-    imageTexts: ['Kira+Rabbit'],
-    description: 'Shy but lovely rabbit.',
-    temperament: ['Shy', 'Calm'],
-    health: 'Healthy.',
-    ownerId: MOCK_OWNER_ID,
-  },
-];
-
 // --- Status Styling Helper (Enhanced) ---
 const getStatusStyle = (status: Pet['status']) => {
   switch (status) {
@@ -155,12 +80,53 @@ const getStatusStyle = (status: Pet['status']) => {
 const MyPets: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('All');
+  const [ownerPets, setOwnerPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 1. Data Filtering (Owner ID)
-  const ownerPets = useMemo(
-    () => MOCK_PETS.filter(p => p.ownerId === MOCK_OWNER_ID),
-    []
-  );
+  // Fetch owner's pets from API
+  useEffect(() => {
+    const fetchOwnerPets = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch('http://localhost:5000/api/pets/owner/my-pets', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Transform API data to match Pet interface
+          const transformedPets = data.pets.map((pet: any) => ({
+            id: pet._id,
+            name: pet.name,
+            type: pet.type,
+            breed: pet.breed,
+            age: pet.age,
+            location: pet.location,
+            status: pet.status,
+            imageTexts: [pet.imageUrl || `${pet.name}+${pet.type}`],
+            description: pet.description,
+            temperament: pet.temperament || [],
+            health: pet.health,
+            ownerId: pet.ownerId
+          }));
+          
+          setOwnerPets(transformedPets);
+        } else {
+          console.error('Failed to fetch pets:', data.message);
+        }
+      } catch (error) {
+        console.error('Fetch pets error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOwnerPets();
+  }, []);
 
   // 2. Data Aggregation for Summary Panel
   const stats = useMemo(() => ({
@@ -272,6 +238,17 @@ const MyPets: React.FC = () => {
 
   // --- Main Render ---
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 mx-auto mb-4" style={{ borderColor: COLORS.primaryTeal }}></div>
+          <p className="text-gray-600 font-semibold">Loading your pets...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-10">
       <h1
@@ -295,19 +272,25 @@ const MyPets: React.FC = () => {
             const placeholderText = pet.imageTexts?.[0] || `${pet.name}+${pet.type}`;
 
             return (
-              <Link
+              <div
                 key={pet.id}
-                // NOTE: Replace with actual edit route
-                to={`/owner/edit-pet/${pet.id}`}
-                className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col transition duration-300 hover:shadow-2xl hover:translate-y-[-2px] cursor-pointer border-t-8"
+                className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col transition duration-300 hover:shadow-2xl hover:translate-y-[-2px] border-t-8"
                 style={{ borderColor: style.color }} // Border color based on Status
               >
                 <div className="h-40 overflow-hidden relative">
                   <img
-                    src={`https://placehold.co/400x160/${style.color.substring(1)}/FFFFFF?text=${placeholderText.replace(/\s/g, '+')}`}
+                    src={
+                      pet.imageTexts?.[0] && pet.imageTexts[0].startsWith('http')
+                        ? pet.imageTexts[0]
+                        : `https://placehold.co/400x160/${style.color.substring(1)}/FFFFFF?text=${placeholderText.replace(/\s/g, '+')}`
+                    }
                     alt={pet.name}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      // Fallback to placeholder if image fails to load
+                      e.currentTarget.src = `https://placehold.co/400x160/${style.color.substring(1)}/FFFFFF?text=${placeholderText.replace(/\s/g, '+')}`;
+                    }}
                   />
                   {/* Status Badge */}
                   <div
@@ -338,7 +321,7 @@ const MyPets: React.FC = () => {
                     <Edit className="mr-1" size={16} /> Manage Listing
                   </Link>
                 </div>
-              </Link>
+              </div>
             );
           })
         ) : (

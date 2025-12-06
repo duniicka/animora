@@ -435,15 +435,6 @@ const OwnerDashboard: React.FC<{
                     ))
                 }
             </div>
-            <div className="mt-6 text-center">
-                <Link 
-                    to="/owner/applications" 
-                    className="text-sm font-semibold"
-                    style={{ color: COLORS.primaryTeal }}
-                >
-                    View All Applications &rarr;
-                </Link>
-            </div>
         </div>
       </section>
     </div>

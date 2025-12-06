@@ -18,34 +18,25 @@ const COLORS = {
   cardBackground: '#FFFFFF', // Card background color
 };
 
-// Mock Pet Data
+// Pet Data Interface
 interface Pet {
-    id: number;
+    id: string;
     name: string;
     type: 'Dog' | 'Cat' | 'Rabbit' | 'Bird';
     breed: string;
     age: number;
     location: string;
-    status: 'Available' | 'Pending';
+    status: 'Available' | 'Pending' | 'Adopted';
     imageText: string;
+    imageUrl?: string;
 }
-
-const mockPets: Pet[] = [
-    { id: 1, name: "Max", type: "Dog", breed: "Golden Retriever", age: 2, location: "Baku", status: "Available", imageText: "Max+Dog" },
-    { id: 2, name: "Luna", type: "Cat", breed: "Siamese", age: 1, location: "Ganja", status: "Available", imageText: "Luna+Cat" },
-    { id: 3, name: "Rocky", type: "Dog", breed: "Pug", age: 5, location: "Baku", status: "Available", imageText: "Rocky+Pug" },
-    { id: 4, name: "Oreo", type: "Cat", breed: "Domestic Shorthair", age: 3, location: "Sumgait", status: "Pending", imageText: "Oreo+Cat" },
-    { id: 5, name: "Kira", type: "Rabbit", breed: "Mini Lop", age: 1, location: "Baku", status: "Available", imageText: "Kira+Rabbit" },
-    { id: 6, name: "Zeus", type: "Dog", breed: "German Shepherd", age: 4, location: "Ganja", status: "Available", imageText: "Zeus+Dog" },
-    { id: 7, name: "Coco", type: "Cat", breed: "Maine Coon", age: 7, location: "Baku", status: "Available", imageText: "Coco+Cat" },
-    { id: 8, name: "Buddy", type: "Dog", breed: "Beagle", age: 3, location: "Sumgait", status: "Available", imageText: "Buddy+Beagle" },
-    { id: 9, name: "Pip", type: "Bird", breed: "Cockatiel", age: 0, location: "Ganja", status: "Available", imageText: "Pip+Bird" },
-];
 
 // --- Pet Card Component ---
 const PetCard: React.FC<{ pet: Pet }> = ({ pet }) => {
-    // Determine image URL
-    const imageUrl = `https://placehold.co/400x300/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${pet.imageText.replace(/\s/g, '+')}`;
+    // Determine image URL - use real image if available, otherwise placeholder
+    const imageUrl = pet.imageUrl && pet.imageUrl.startsWith('http')
+        ? pet.imageUrl
+        : `https://placehold.co/400x300/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${pet.imageText.replace(/\s/g, '+')}`;
 
     return (
         <div 
@@ -57,11 +48,19 @@ const PetCard: React.FC<{ pet: Pet }> = ({ pet }) => {
                     src={imageUrl} 
                     alt={`Image of ${pet.name}`} 
                     className="w-full h-full object-cover"
-                    onError={(e: any) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300/CCCCCC/000000?text=Image+Not+Found"; }}
+                    onError={(e: any) => { 
+                        e.target.onerror = null; 
+                        e.target.src = `https://placehold.co/400x300/${COLORS.primaryTeal.substring(1)}/FFFFFF?text=${pet.imageText.replace(/\s/g, '+')}`;
+                    }}
                 />
                 {pet.status === 'Pending' && (
                     <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                         PENDING
+                    </div>
+                )}
+                {pet.status === 'Adopted' && (
+                    <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        ADOPTED
                     </div>
                 )}
             </div>
@@ -107,11 +106,15 @@ interface Filters {
     location: 'All' | string;
 }
 
-const FilterPanel: React.FC<{ filters: Filters, setFilters: React.Dispatch<React.SetStateAction<Filters>> }> = ({ filters, setFilters }) => {
+const FilterPanel: React.FC<{ 
+    filters: Filters, 
+    setFilters: React.Dispatch<React.SetStateAction<Filters>>,
+    pets: Pet[]
+}> = ({ filters, setFilters, pets }) => {
     
-    // Extract unique types and locations from mock data
-    const petTypes = ['All', ...Array.from(new Set(mockPets.map(p => p.type)))] as ('All' | Pet['type'])[];
-    const locations = ['All', ...Array.from(new Set(mockPets.map(p => p.location)))];
+    // Extract unique types and locations from actual pet data
+    const petTypes = ['All', ...Array.from(new Set(pets.map(p => p.type)))] as ('All' | Pet['type'])[];
+    const locations = ['All', ...Array.from(new Set(pets.map(p => p.location)))];
 
     const handleChange = (name: keyof Filters, value: string) => {
         setFilters(prev => ({ ...prev, [name]: value }));
@@ -180,10 +183,47 @@ const PetList: React.FC = () => {
         type: 'All',
         location: 'All',
     });
+    const [pets, setPets] = useState<Pet[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch pets from API
+    useEffect(() => {
+        const fetchPets = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/pets');
+                const data = await response.json();
+
+                if (data.success) {
+                    // Transform API data
+                    const transformedPets = data.pets.map((pet: any) => ({
+                        id: pet._id,
+                        name: pet.name,
+                        type: pet.type,
+                        breed: pet.breed,
+                        age: pet.age,
+                        location: pet.location,
+                        status: pet.status,
+                        imageText: `${pet.name}+${pet.type}`,
+                        imageUrl: pet.imageUrl
+                    }));
+                    
+                    setPets(transformedPets);
+                } else {
+                    console.error('Failed to fetch pets');
+                }
+            } catch (error) {
+                console.error('Fetch pets error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPets();
+    }, []);
     
     // Filter logic memoized for performance
     const filteredPets = useMemo(() => {
-        let result = mockPets;
+        let result = pets;
         
         // 1. Filter by Pet Type
         if (filters.type !== 'All') {
@@ -212,7 +252,21 @@ const PetList: React.FC = () => {
         });
         
         return result;
-    }, [filters]);
+    }, [filters, pets]);
+
+    if (loading) {
+        return (
+            <div className="text-gray-800 relative min-h-screen" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <ThreeBackground />
+                <div className="relative z-10 flex justify-center items-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 mx-auto mb-4" style={{ borderColor: COLORS.primaryTeal }}></div>
+                        <p className="text-gray-600 font-semibold text-lg">Loading pets...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="text-gray-800 relative " style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -223,14 +277,14 @@ const PetList: React.FC = () => {
                     Pets Available for Adoption
                 </h1>
                 <p className="text-lg text-gray-600 mb-8">
-                    Find your perfect companion from our loving animals below.
+                    Find your perfect companion from our loving animals below. ({pets.length} pets available)
                 </p>
 
                 <div className="lg:flex lg:space-x-8">
                     
                     {/* Filter Sidebar (Desktop) */}
                     <div className="lg:w-1/4 hidden lg:block">
-                        <FilterPanel filters={filters} setFilters={setFilters} />
+                        <FilterPanel filters={filters} setFilters={setFilters} pets={pets} />
                     </div>
 
                     {/* Pets Grid */}
@@ -243,7 +297,7 @@ const PetList: React.FC = () => {
                                     Filters ({filteredPets.length} results)
                                 </summary>
                                 <div className="pt-4">
-                                    <FilterPanel filters={filters} setFilters={setFilters} />
+                                    <FilterPanel filters={filters} setFilters={setFilters} pets={pets} />
                                 </div>
                             </details>
                         </div>

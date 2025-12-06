@@ -1,5 +1,7 @@
 import React from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { getRoleBasedRedirect } from "../../utils/roleRedirect";
 
 const COLORS = {
   primaryTeal: "#009688",
@@ -28,22 +30,28 @@ const Logo: React.FC<{ isActive: boolean }> = ({ isActive }) => (
 
 const Header: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const isPetsPage = location.pathname.startsWith("/pets");
-  const linkBase =
-
-    "font-medium transition duration-150 hover:text-gray-900";
+  const linkBase = "font-medium transition duration-150 hover:text-gray-900";
   const activeStyle = { color: COLORS.primaryTeal, fontWeight: 700 as const };
-  const handleAuthClick = () => {
-    const isLoggedIn: boolean = false; // Replace with your actual authentication logic
-    if (isLoggedIn) {
-      console.log("LOGGED IN: 'My Account' clicked. Redirecting to Profile page.");
-      // Replace with your real destination:
-      window.location.href = "/profile";
+  
+  const handleAuthClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (user) {
+      // Logged in - redirect based on role
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'owner') {
+        navigate('/owner');
+      } else {
+        navigate('/profile');
+      }
     } else {
-      console.log("LOGGED OUT: 'My Account' clicked. Redirecting to Sign In/Sign Up page.");
-      // Replace with your real destination:
-      window.location.href = "/auth/login";
+      // Not logged in - go to login
+      navigate('/auth/login');
     }
   };
   return (
@@ -84,14 +92,13 @@ const Header: React.FC = () => {
             About Us
           </NavLink>
 
-          <a
+          <button
             onClick={handleAuthClick}
-            href="#"
             className="font-bold px-4 py-2 rounded-lg transition duration-150 text-white shadow-md hover:scale-[1.03]"
             style={{ backgroundColor: COLORS.darkAccentGreen }}
           >
-            My Account
-          </a>
+            {user ? 'My Account' : 'Sign In'}
+          </button>
         </nav>
       </div>
     </header>

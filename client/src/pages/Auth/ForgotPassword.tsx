@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ThreeBackground from '../../components/Background/Background';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 const COLORS = {
   primaryTeal: '#009688', // Main teal color 
   darkAccentGreen: '#00796B', // Accent color
@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
         if (!email.includes('@') || email.length < 5) {
@@ -25,8 +25,26 @@ const ForgotPassword = () => {
             return;
         }
 
-        setMessage(`If ${email} is linked to an account, a password reset link has been sent. Check your inbox!`);
-        setIsSuccess(true);
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessage(`If ${email} is linked to an account, a password reset link has been sent. Check your inbox!`);
+                setIsSuccess(true);
+            } else {
+                setMessage(data.message || 'Failed to send reset email');
+                setIsSuccess(false);
+            }
+        } catch (error: any) {
+            setMessage('Failed to send reset email. Please try again.');
+            setIsSuccess(false);
+        }
     };
 
     
