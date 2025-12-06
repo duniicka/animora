@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import ThreeBackground from '../../components/Background/Background';
 import { Link } from 'react-router';
+import { API_ENDPOINTS } from '../../config/api';
 // Declaration for THREE.js global object access (for TypeScript)
 declare global {
   interface Window {
@@ -190,7 +191,7 @@ const PetList: React.FC = () => {
     useEffect(() => {
         const fetchPets = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/pets');
+                const response = await fetch(API_ENDPOINTS.pets);
                 const data = await response.json();
 
                 if (data.success) {

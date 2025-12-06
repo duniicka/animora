@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, Trash2, Save, MessageSquare, ArrowLeft, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { API_ENDPOINTS } from '../../config/api';
 
 // --- Interface Definitions ---
 export interface Pet {
@@ -147,10 +148,16 @@ const EditPet: React.FC = () => {
   // Fetch pet data
   useEffect(() => {
     const fetchPet = async () => {
+      if (!id) {
+        addToast('Pet ID not found', 'error');
+        navigate('/owner/my-pets');
+        return;
+      }
+
       try {
         const token = localStorage.getItem('token');
         
-        const response = await fetch(`http://localhost:5000/api/pets/${id}`, {
+        const response = await fetch(API_ENDPOINTS.petById(id), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -208,13 +215,15 @@ const EditPet: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
+    if (!id) return;
+    
     setShowSaveModal(false);
     setIsSaving(true);
 
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5000/api/pets/${id}`, {
+      const response = await fetch(API_ENDPOINTS.petById(id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -252,12 +261,14 @@ const EditPet: React.FC = () => {
   };
 
   const handleDelete = async () => {
+    if (!id) return;
+    
     setShowDeleteModal(false);
 
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5000/api/pets/${id}`, {
+      const response = await fetch(API_ENDPOINTS.petById(id), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

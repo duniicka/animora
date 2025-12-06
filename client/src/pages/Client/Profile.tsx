@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import LogoutModal from '../../components/LogoutModal';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
+import { API_ENDPOINTS } from '../../config/api';
 
 
 
@@ -315,7 +316,7 @@ const ProfilePage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch('http://localhost:5000/api/auth/delete-account', {
+      const response = await fetch(API_ENDPOINTS.deleteAccount, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

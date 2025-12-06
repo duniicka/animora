@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getRoleBasedRedirect } from '../../utils/roleRedirect';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_ENDPOINTS } from '../../config/api';
 
 const COLORS = {
   primaryTeal: '#009688',
@@ -70,7 +71,7 @@ const GoogleSuccess: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/auth/complete-google-profile', {
+      const response = await fetch(API_ENDPOINTS.completeGoogleProfile, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

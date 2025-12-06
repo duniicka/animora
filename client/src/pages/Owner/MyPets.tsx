@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/api';
 import {
   Search,
   Edit,
@@ -89,7 +90,7 @@ const MyPets: React.FC = () => {
       try {
         const token = localStorage.getItem('token');
         
-        const response = await fetch('http://localhost:5000/api/pets/owner/my-pets', {
+        const response = await fetch(API_ENDPOINTS.ownerPets, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

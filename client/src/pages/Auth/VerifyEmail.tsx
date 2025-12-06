@@ -3,6 +3,7 @@ import ThreeBackground from '../../components/Background/Background';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getRoleBasedRedirect } from '../../utils/roleRedirect';
+import { API_ENDPOINTS } from '../../config/api';
 
 const COLORS = {
   primaryTeal: '#009688',
@@ -80,7 +81,7 @@ const VerifyEmail: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-email', {
+      const response = await fetch(API_ENDPOINTS.verifyEmail, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code: verificationCode })
@@ -112,7 +113,7 @@ const VerifyEmail: React.FC = () => {
     setResending(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/resend-code', {
+      const response = await fetch(API_ENDPOINTS.resendCode, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

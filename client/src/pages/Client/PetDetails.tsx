@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_ENDPOINTS } from '../../config/api';
 // Assuming ThreeBackground is a component for visual effect, keeping the import for completeness
 // import ThreeBackground from '../../components/Background/Background'; 
 import {
@@ -169,8 +170,14 @@ const PetDetail: React.FC<{ pet?: Pet; onReturn?: () => void }> = ({ pet, onRetu
         }
 
         const fetchPet = async () => {
+            if (!id) {
+                setError('Pet ID not found');
+                setLoading(false);
+                return;
+            }
+
             try {
-                const response = await fetch(`http://localhost:5000/api/pets/${id}`);
+                const response = await fetch(API_ENDPOINTS.petById(id));
                 const data = await response.json();
 
                 if (data.success) {

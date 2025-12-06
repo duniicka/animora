@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ThreeBackground from '../../components/Background/Background';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/api';
 
 const COLORS = {
   primaryTeal: '#009688',
@@ -48,7 +49,7 @@ export const ResetPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/auth/reset-password/${token}`, {
+      const response = await fetch(API_ENDPOINTS.resetPassword(token), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })

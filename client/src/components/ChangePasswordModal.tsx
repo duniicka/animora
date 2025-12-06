@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -47,7 +48,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch('http://localhost:5000/api/auth/change-password', {
+      const response = await fetch(API_ENDPOINTS.changePassword, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

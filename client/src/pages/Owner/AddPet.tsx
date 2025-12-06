@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/api';
 import { 
     PawPrint, 
     Info, 
@@ -197,7 +198,7 @@ const AddPet: React.FC = () => {
         formDataToSend.append('image', imageFile);
       }
 
-      const response = await fetch('http://localhost:5000/api/pets', {
+      const response = await fetch(API_ENDPOINTS.pets, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

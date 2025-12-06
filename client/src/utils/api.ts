@@ -18,8 +18,13 @@ export interface Pet {
   images?: string[];
 }
 
+const getBaseURL = () => {
+  const url = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return url.endsWith('/api') ? url : `${url}/api`;
+};
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: getBaseURL(),
   headers: { "Content-Type": "application/json" },
 });
 

@@ -63,7 +63,7 @@ const ROUTES: RouteObject[]  = [
       },
       {
          path: "pets/:id",
-         element: <PetDetails pet={undefined as any} setPage={() => {}} />
+         element: <PetDetails />
       },
       {
          path: "adoption-request/:petId", 
@@ -112,15 +112,15 @@ const ROUTES: RouteObject[]  = [
       children: [
          {
             index: true,
-            element: <AdminDashboard />
+            element: <AdminDashboard navigate={() => {}} />
          },
          {
             path: "manage-pets",
-            element: <ManagePets />
+            element: <ManagePets navigate={() => {}} />
          },
          {
             path: "manage-users",
-            element: <ManageUsers />
+            element: <ManageUsers navigate={() => {}} />
          }
       ]
    },

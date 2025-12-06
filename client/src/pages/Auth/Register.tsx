@@ -3,6 +3,7 @@ import ThreeBackground from '../../components/Background/Background';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { FcGoogle } from "react-icons/fc";
+import { API_ENDPOINTS } from '../../config/api';
 
 // --- Configuration and Data ---
 
@@ -158,7 +159,7 @@ const RegisterForm: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(API_ENDPOINTS.register, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -294,7 +295,7 @@ const RegisterForm: React.FC = () => {
 
       <button
         type="button"
-        onClick={() => window.location.href = `http://localhost:5000/auth/google`}
+        onClick={() => window.location.href = API_ENDPOINTS.googleAuth}
         className="flex items-center justify-center w-full py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 transform hover:scale-[1.01] shadow-sm hover:shadow-md"
       >
         <FcGoogle className="mr-3 text-xl" /> 

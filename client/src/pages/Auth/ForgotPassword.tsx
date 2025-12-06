@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ThreeBackground from '../../components/Background/Background';
 import { Link } from 'react-router-dom';
+import { API_ENDPOINTS } from '../../config/api';
 const COLORS = {
   primaryTeal: '#009688', // Main teal color 
   darkAccentGreen: '#00796B', // Accent color
@@ -26,7 +27,7 @@ const ForgotPassword = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+            const response = await fetch(API_ENDPOINTS.forgotPassword, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
